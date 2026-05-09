@@ -1,0 +1,14 @@
+# Backend
+backProject/.env
+backProject/uploads/*
+
+# Frontend
+webVue/node_modules/
+webVue/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

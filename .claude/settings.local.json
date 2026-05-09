@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /Users/zengyanqi/.claude/plans/ 2>/dev/null || echo \"No plans directory\")",
+      "Read(//Users/zengyanqi/.claude/plans/**)",
+      "Bash(go version *)",
+      "Bash(npm --version)",
+      "Bash(go get *)",
+      "Bash(go build *)",
+      "Bash(rm -rf webVue)",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npx vue-tsc *)",
+      "Bash(npm run *)"
+    ]
+  }
+}
