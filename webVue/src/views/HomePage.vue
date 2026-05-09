@@ -27,6 +27,31 @@ const { icons } = storeToRefs(iconStore)
 
 const activeMenuId = ref<number | undefined>(undefined)
 
+// 网页缩放
+const zoomLevel = ref(100)
+const savedZoom = localStorage.getItem('zyqhome_page_zoom')
+if (savedZoom) {
+  const v = parseInt(savedZoom)
+  if (!isNaN(v) && v >= 20 && v <= 180) {
+    zoomLevel.value = v
+  }
+}
+
+function zoomIn() {
+  zoomLevel.value = Math.min(180, zoomLevel.value + 10)
+  localStorage.setItem('zyqhome_page_zoom', String(zoomLevel.value))
+}
+
+function zoomOut() {
+  zoomLevel.value = Math.max(20, zoomLevel.value - 10)
+  localStorage.setItem('zyqhome_page_zoom', String(zoomLevel.value))
+}
+
+function resetZoom() {
+  zoomLevel.value = 100
+  localStorage.setItem('zyqhome_page_zoom', '100')
+}
+
 async function onMenuSelect(menuId: number) {
   // 点击同一个菜单取消选中，回到默认视图
   if (activeMenuId.value === menuId) {
@@ -53,7 +78,10 @@ onMounted(async () => {
     <PageBackground
       :image-url="publicConfig?.background_image"
       :bg-color="publicConfig?.background_color"
-    >
+    />
+
+    <!-- 内容层：缩放除背景外的所有元素 -->
+    <div class="content-layer" :style="zoomLevel !== 100 ? { zoom: zoomLevel / 100 } : {}">
       <div class="home-container">
         <!-- 时钟 -->
         <div class="clock-section">
@@ -73,8 +101,6 @@ onMounted(async () => {
           :columns="publicConfig?.icon_columns || 12"
         />
       </div>
-    </PageBackground>
-
     <!-- 侧边菜单 — 放在 PageBackground 外面，避免 scoped CSS 覆盖 position: fixed -->
     <RightMenu
       :menus="menus"
@@ -94,12 +120,30 @@ onMounted(async () => {
     <div class="footer-text">
       {{ publicConfig?.footer_text || '只羡忘羡不羡仙，说是天天就天天' }}
     </div>
+
+    </div>
+
+    <!-- 网页缩放控制（不受缩放影响） -->
+    <div class="zoom-control">
+      <button class="zoom-btn" @click="zoomIn" title="放大">＋</button>
+      <div class="zoom-value" @click="resetZoom" title="点击重置为 100%">{{ zoomLevel }}%</div>
+      <button class="zoom-btn" @click="zoomOut" title="缩小">－</button>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .home-page {
   height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 内容缩放层：覆盖在背景之上 */
+.content-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   overflow: hidden;
 }
 
@@ -173,5 +217,67 @@ onMounted(async () => {
   font-size: 12px;
   z-index: 10;
   text-align: center;
+}
+
+/* 网页缩放控制 */
+.zoom-control {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 200;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 8px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  user-select: none;
+}
+
+.zoom-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.zoom-btn:active {
+  transform: scale(0.9);
+}
+
+.zoom-value {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  padding: 4px 0;
+  letter-spacing: 0.5px;
+  transition: color 0.2s;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom-value:hover {
+  color: #fff;
 }
 </style>

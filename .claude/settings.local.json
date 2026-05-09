@@ -20,7 +20,12 @@
       "Bash(node -e \"const icons = require\\('@element-plus/icons-vue'\\); console.log\\(icons.Check ? 'Check exists' : 'Check missing'\\)\")",
       "Bash(npx --no-install vue-tsc --noEmit)",
       "Bash(node -e \"const l = require\\('lucide-vue-next'\\); console.log\\(Object.keys\\(l\\).filter\\(k => k.toLowerCase\\(\\).includes\\('tool'\\)\\).join\\(', '\\)\\)\")",
-      "Bash(node -e \"const l = require\\('lucide-vue-next'\\); console.log\\(Object.keys\\(l\\).filter\\(k => k.toLowerCase\\(\\).includes\\('collapse'\\)\\).join\\(', '\\)\\)\")"
+      "Bash(node -e \"const l = require\\('lucide-vue-next'\\); console.log\\(Object.keys\\(l\\).filter\\(k => k.toLowerCase\\(\\).includes\\('collapse'\\)\\).join\\(', '\\)\\)\")",
+      "Bash(curl -s http://localhost:5173/src/views/HomePage.vue)",
+      "Bash(pkill -f \"vite --port 5173\")",
+      "Bash(grep -v '\\\\.sample$')",
+      "Bash(git config *)",
+      "Bash(chmod +x /Users/zengyanqi/myProject/zyqHome/.githooks/post-commit)"
     ]
   }
 }
