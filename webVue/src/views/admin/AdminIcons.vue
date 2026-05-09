@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useIconStore } from '@/stores/iconStore'
+import { useMenuStore } from '@/stores/menuStore'
 import type { CenterIcon } from '@/types'
 
 const iconStore = useIconStore()
+const menuStore = useMenuStore()
 const icons = ref<CenterIcon[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -18,10 +20,22 @@ const defaultForm: Partial<CenterIcon> = {
   color: '#1890ff',
   sort_order: 0,
   is_active: true,
+  menu_id: 0,
+}
+
+const allMenus = computed(() => menuStore.allMenus)
+
+function getMenuName(menuId: number): string {
+  if (menuId === 0) return '默认'
+  const menu = allMenus.value.find(m => m.id === menuId)
+  return menu ? menu.title : `菜单 #${menuId}`
 }
 
 onMounted(async () => {
-  await loadIcons()
+  await Promise.all([
+    loadIcons(),
+    menuStore.fetchAllMenus(),
+  ])
 })
 
 async function loadIcons() {
@@ -50,6 +64,7 @@ async function handleSave() {
     ElMessage.warning('请输入图标名称')
     return
   }
+  if (!editingItem.value.menu_id) editingItem.value.menu_id = 0
   try {
     if (isEdit.value && editingItem.value.id) {
       await iconStore.update(editingItem.value.id, editingItem.value)
@@ -110,6 +125,13 @@ async function handleDelete(id: number) {
           </template>
         </el-table-column>
         <el-table-column prop="sort_order" label="排序" width="70" />
+        <el-table-column label="关联菜单" width="120">
+          <template #default="{ row }">
+            <el-tag :type="row.menu_id === 0 ? 'info' : 'warning'" size="small">
+              {{ getMenuName(row.menu_id) }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="is_active" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.is_active ? 'success' : 'info'" size="small">
@@ -150,6 +172,18 @@ async function handleDelete(id: number) {
         </el-form-item>
         <el-form-item label="启用">
           <el-switch v-model="editingItem.is_active" />
+        </el-form-item>
+        <el-form-item label="关联菜单">
+          <el-select v-model="editingItem.menu_id" placeholder="选择菜单" clearable style="width: 100%">
+            <el-option :value="0" label="默认（始终显示）" />
+            <el-option
+              v-for="menu in allMenus"
+              :key="menu.id"
+              :value="menu.id"
+              :label="menu.title"
+            />
+          </el-select>
+          <div class="form-tip">选择关联的左侧菜单，选中该菜单时才会显示此图标</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -201,5 +235,11 @@ async function handleDelete(id: number) {
 .url-text {
   color: #409eff;
   font-size: 13px;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
 }
 </style>

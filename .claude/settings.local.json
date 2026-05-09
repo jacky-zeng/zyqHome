@@ -11,7 +11,11 @@
       "Bash(npm create *)",
       "Bash(npm install *)",
       "Bash(npx vue-tsc *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(timeout 5 go run cmd/server/main.go)",
+      "Bash(npx vite *)",
+      "Bash(lsof -ti:5173)",
+      "Bash(curl -s http://localhost:5173)"
     ]
   }
 }

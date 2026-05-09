@@ -18,6 +18,22 @@ func NewIconHandler(service *service.IconService) *IconHandler {
 }
 
 func (h *IconHandler) GetActiveIcons(c *gin.Context) {
+	menuIDStr := c.Query("menu_id")
+	if menuIDStr != "" {
+		menuID, err := strconv.ParseUint(menuIDStr, 10, 64)
+		if err != nil {
+			response.BadRequest(c, "无效的 menu_id")
+			return
+		}
+		icons, err := h.service.GetActiveIconsByMenuID(uint(menuID))
+		if err != nil {
+			response.ServerError(c, "获取图标失败")
+			return
+		}
+		response.Success(c, icons)
+		return
+	}
+
 	icons, err := h.service.GetActiveIcons()
 	if err != nil {
 		response.ServerError(c, "获取图标失败")

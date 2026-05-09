@@ -37,5 +37,10 @@ func (r *ConfigRepo) Upsert(config *model.SiteConfig) error {
 }
 
 func (r *ConfigRepo) UpsertByKey(key, value string) error {
-	return database.DB.Where("config_key = ?", key).Assign(model.SiteConfig{ConfigValue: value}).FirstOrCreate(&model.SiteConfig{}).Error
+	var existing model.SiteConfig
+	result := database.DB.Where("config_key = ?", key).First(&existing)
+	if result.Error != nil {
+		return database.DB.Create(&model.SiteConfig{ConfigKey: key, ConfigValue: value}).Error
+	}
+	return database.DB.Model(&existing).Update("config_value", value).Error
 }

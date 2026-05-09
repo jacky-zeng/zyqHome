@@ -1,8 +1,9 @@
 import request from './request'
 import type { ApiResponse, CenterIcon, SortRequest } from '@/types'
 
-export function getActiveIconsApi() {
-  return request.get<ApiResponse<CenterIcon[]>>('/api/icons')
+export function getActiveIconsApi(menuId?: number) {
+  const params = menuId ? { menu_id: menuId } : {}
+  return request.get<ApiResponse<CenterIcon[]>>('/api/icons', { params })
 }
 
 export function getAllIconsApi() {

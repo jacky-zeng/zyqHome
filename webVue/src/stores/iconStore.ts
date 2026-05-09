@@ -8,8 +8,8 @@ export const useIconStore = defineStore('icon', () => {
   const icons = ref<CenterIcon[]>([])
   const allIcons = ref<CenterIcon[]>([])
 
-  async function fetchActiveIcons() {
-    const res = await getActiveIconsApi()
+  async function fetchActiveIcons(menuId?: number) {
+    const res = await getActiveIconsApi(menuId)
     if (res.data.code === 0) {
       icons.value = res.data.data
     }

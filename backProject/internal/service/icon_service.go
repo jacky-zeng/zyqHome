@@ -40,6 +40,10 @@ func (s *IconService) GetActiveIcons() ([]model.CenterIcon, error) {
 	return icons, nil
 }
 
+func (s *IconService) GetActiveIconsByMenuID(menuID uint) ([]model.CenterIcon, error) {
+	return s.repo.FindActiveByMenuID(menuID)
+}
+
 func (s *IconService) GetAllIcons() ([]model.CenterIcon, error) {
 	return s.repo.FindAll()
 }

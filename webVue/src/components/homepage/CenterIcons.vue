@@ -27,13 +27,15 @@ defineProps<{
 .center-icons {
   display: flex;
   justify-content: center;
-  padding: 12px 0;
+  margin-top: 50px;
+  position: relative;
+  z-index: 10;
 }
 
 .icons-grid {
   display: grid;
-  gap: 8px;
-  max-width: 600px;
-  width: 100%;
+  grid-template-columns: repeat(v-bind('columns || 12'), 1fr);
+  gap: 20px;
+  max-width: 1200px;
 }
 </style>

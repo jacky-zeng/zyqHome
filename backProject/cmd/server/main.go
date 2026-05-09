@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/joho/godotenv"
+
 	"zyqHome/backProject/internal/config"
 	"zyqHome/backProject/internal/database"
 	"zyqHome/backProject/internal/handler"
@@ -14,6 +16,9 @@ import (
 )
 
 func main() {
+	// Load .env file if exists
+	_ = godotenv.Load()
+
 	cfg := config.Load()
 
 	// Init database connections

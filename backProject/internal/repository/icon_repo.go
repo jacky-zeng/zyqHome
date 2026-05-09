@@ -25,6 +25,13 @@ func (r *IconRepo) FindActive() ([]model.CenterIcon, error) {
 	return icons, err
 }
 
+func (r *IconRepo) FindActiveByMenuID(menuID uint) ([]model.CenterIcon, error) {
+	var icons []model.CenterIcon
+	err := database.DB.Where("is_active = ? AND (menu_id = ? OR menu_id = 0)", true, menuID).
+		Order("sort_order ASC, id ASC").Find(&icons).Error
+	return icons, err
+}
+
 func (r *IconRepo) FindByID(id uint) (*model.CenterIcon, error) {
 	var icon model.CenterIcon
 	err := database.DB.First(&icon, id).Error

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"zyqHome/backProject/internal/service"
 	"zyqHome/backProject/pkg/response"
@@ -33,10 +35,17 @@ func (h *ConfigHandler) GetAllConfigs(c *gin.Context) {
 }
 
 func (h *ConfigHandler) UpdateConfigs(c *gin.Context) {
-	var configs map[string]string
-	if err := c.ShouldBindJSON(&configs); err != nil {
+	var raw map[string]interface{}
+	if err := c.ShouldBindJSON(&raw); err != nil {
 		response.BadRequest(c, "参数错误")
 		return
+	}
+	configs := make(map[string]string, len(raw))
+	for k, v := range raw {
+		if k == "" {
+			continue
+		}
+		configs[k] = fmt.Sprintf("%v", v)
 	}
 	if err := h.service.UpdateConfigs(configs); err != nil {
 		response.ServerError(c, "更新配置失败")
