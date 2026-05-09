@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <div class="center-icons" v-if="icons.length > 0">
-    <div class="icons-grid" :style="{ gridTemplateColumns: `repeat(${columns || 5}, 1fr)` }">
+    <div class="icons-grid" :style="{ gridTemplateColumns: `repeat(${Math.min(columns || 5, 10)}, 1fr)` }">
       <IconItem
         v-for="icon in icons"
         :key="icon.id"

@@ -69,7 +69,6 @@ onMounted(async () => {
 
         <!-- 图标网格 -->
         <CenterIcons
-          v-if="publicConfig?.show_center_icons"
           :icons="icons"
           :columns="publicConfig?.icon_columns || 12"
         />
@@ -78,7 +77,6 @@ onMounted(async () => {
 
     <!-- 侧边菜单 — 放在 PageBackground 外面，避免 scoped CSS 覆盖 position: fixed -->
     <RightMenu
-      v-if="publicConfig?.show_right_menu"
       :menus="menus"
       :active-menu-id="activeMenuId"
       @select="onMenuSelect"
@@ -94,7 +92,7 @@ onMounted(async () => {
 
     <!-- 底部文字 -->
     <div class="footer-text">
-      只羡忘羡不羡仙，说是天天就天天
+      {{ publicConfig?.footer_text || '只羡忘羡不羡仙，说是天天就天天' }}
     </div>
   </div>
 </template>
@@ -127,6 +125,7 @@ onMounted(async () => {
   color: #fff;
   letter-spacing: 8px;
   text-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  font-variant-numeric: tabular-nums;
 }
 
 .clock-date {

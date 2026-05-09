@@ -42,8 +42,7 @@ export interface PublicConfig {
   background_color: string
   default_search: string
   search_placeholder: string
-  show_center_icons: boolean
-  show_right_menu: boolean
+  footer_text: string
   icon_columns: number
 }
 
@@ -73,4 +72,20 @@ export interface SortItem {
 
 export interface SortRequest {
   items: SortItem[]
+}
+
+// Image
+export interface ImageItem {
+  id: number
+  filename: string
+  url: string
+  category: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ImageListResponse {
+  items: ImageItem[]
+  total: number
+  page: number
 }

@@ -2,10 +2,11 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useConfigStore } from '@/stores/configStore'
+import ImagePicker from '@/components/common/ImagePicker.vue'
 
 const configStore = useConfigStore()
 const loading = ref(false)
-const uploading = ref(false)
+const imagePickerVisible = ref(false)
 
 const form = ref({
   site_title: 'ZyqHome',
@@ -14,9 +15,8 @@ const form = ref({
   background_color: '#f0f2f5',
   default_search: 'google',
   search_placeholder: '搜索...',
-  show_center_icons: 'true',
-  show_right_menu: 'true',
-  icon_columns: '5',
+  footer_text: '',
+  icon_columns: '8',
 })
 
 onMounted(async () => {
@@ -42,21 +42,12 @@ async function handleSave() {
   }
 }
 
-async function handleUpload(file: File) {
-  uploading.value = true
-  try {
-    const result = await configStore.uploadImage(file)
-    if (result.code === 0) {
-      form.value.background_image = result.data.url
-      ElMessage.success('上传成功')
-    } else {
-      ElMessage.error(result.message || '上传失败')
-    }
-  } catch {
-    ElMessage.error('上传失败')
-  } finally {
-    uploading.value = false
-  }
+function openImagePicker() {
+  imagePickerVisible.value = true
+}
+
+function onImageSelected(url: string) {
+  form.value.background_image = url
 }
 
 </script>
@@ -80,13 +71,7 @@ async function handleUpload(file: File) {
 
         <el-form-item label="背景图片">
           <div class="bg-upload">
-            <el-upload
-              :show-file-list="false"
-              :before-upload="(file: any) => { handleUpload(file); return false }"
-              accept="image/*"
-            >
-              <el-button :loading="uploading">上传图片</el-button>
-            </el-upload>
+            <el-button @click="openImagePicker">从图库选择</el-button>
             <span class="hint">支持 jpg/png/gif/webp，最大 10MB</span>
           </div>
           <div v-if="form.background_image" class="bg-preview">
@@ -112,19 +97,18 @@ async function handleUpload(file: File) {
           <el-input v-model="form.search_placeholder" placeholder="搜索..." />
         </el-form-item>
 
-        <el-form-item label="显示中心图标">
-          <el-switch v-model="form.show_center_icons" :active-value="'true'" :inactive-value="'false'" />
-        </el-form-item>
-
-        <el-form-item label="显示右侧菜单">
-          <el-switch v-model="form.show_right_menu" :active-value="'true'" :inactive-value="'false'" />
+        <el-form-item label="底部文字">
+          <el-input v-model="form.footer_text" placeholder="首页底部显示的文字" maxlength="50" show-word-limit />
         </el-form-item>
 
         <el-form-item label="图标列数">
-          <el-input-number v-model="form.icon_columns" :min="3" :max="8" />
+          <el-input-number v-model="form.icon_columns" :min="3" :max="10" />
         </el-form-item>
       </el-form>
     </el-card>
+
+    <!-- Image Picker -->
+    <ImagePicker v-model="imagePickerVisible" @select="onImageSelected" />
   </div>
 </template>
 

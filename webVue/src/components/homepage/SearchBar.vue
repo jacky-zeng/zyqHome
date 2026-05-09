@@ -162,7 +162,7 @@ onUnmounted(() => {
 }
 
 .search-bar {
-  width: 600px;
+  width: 550px;
   height: 44px;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);

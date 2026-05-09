@@ -4,6 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useIconStore } from '@/stores/iconStore'
 import { useMenuStore } from '@/stores/menuStore'
 import type { CenterIcon } from '@/types'
+import ImagePicker from '@/components/common/ImagePicker.vue'
 
 const iconStore = useIconStore()
 const menuStore = useMenuStore()
@@ -12,6 +13,8 @@ const loading = ref(false)
 const dialogVisible = ref(false)
 const editingItem = ref<Partial<CenterIcon>>({})
 const isEdit = ref(false)
+const iconPickerVisible = ref(false)
+const iconFieldTarget = ref<'icon' | 'color'>('icon')
 
 const defaultForm: Partial<CenterIcon> = {
   title: '',
@@ -57,6 +60,15 @@ function openEdit(item: CenterIcon) {
   isEdit.value = true
   editingItem.value = { ...item }
   dialogVisible.value = true
+}
+
+function openIconPicker() {
+  iconFieldTarget.value = 'icon'
+  iconPickerVisible.value = true
+}
+
+function onIconSelected(url: string) {
+  editingItem.value.icon = url
 }
 
 async function handleSave() {
@@ -105,8 +117,9 @@ async function handleDelete(id: number) {
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column label="预览" width="80">
           <template #default="{ row }">
-            <div class="icon-preview" :style="{ background: row.color }">
-              <span>{{ row.title.charAt(0) }}</span>
+            <div class="icon-preview" :style="{ background: row.icon && (row.icon.startsWith('http') || row.icon.startsWith('/')) ? 'transparent' : row.color }">
+              <img v-if="row.icon && (row.icon.startsWith('http') || row.icon.startsWith('/'))" :src="row.icon" :alt="row.title" class="preview-img" />
+              <span v-else>{{ row.title.charAt(0) }}</span>
             </div>
           </template>
         </el-table-column>
@@ -162,7 +175,11 @@ async function handleDelete(id: number) {
           <el-input v-model="editingItem.url" placeholder="跳转链接" />
         </el-form-item>
         <el-form-item label="图标URL">
-          <el-input v-model="editingItem.icon" placeholder="图标图片URL，留空显示首字" />
+          <el-input v-model="editingItem.icon" placeholder="图标图片URL，留空显示首字">
+            <template #append>
+              <el-button @click="openIconPicker">选择</el-button>
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item label="背景色">
           <el-color-picker v-model="editingItem.color" />
@@ -191,6 +208,9 @@ async function handleDelete(id: number) {
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- Image Picker -->
+    <ImagePicker v-model="iconPickerVisible" @select="onIconSelected" />
   </div>
 </template>
 
@@ -217,6 +237,14 @@ async function handleDelete(id: number) {
   color: #fff;
   font-size: 14px;
   font-weight: 600;
+  overflow: hidden;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .color-display {

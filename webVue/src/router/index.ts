@@ -36,6 +36,11 @@ const router = createRouter({
           component: () => import('@/views/admin/AdminIcons.vue'),
         },
         {
+          path: 'images',
+          name: 'admin-images',
+          component: () => import('@/views/admin/AdminImages.vue'),
+        },
+        {
           path: 'config',
           name: 'admin-config',
           component: () => import('@/views/admin/AdminConfig.vue'),

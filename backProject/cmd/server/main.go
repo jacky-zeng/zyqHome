@@ -34,6 +34,7 @@ func main() {
 	iconRepo := repository.NewIconRepo()
 	configRepo := repository.NewConfigRepo()
 	behaviorRepo := repository.NewBehaviorRepo()
+	imageRepo := repository.NewImageRepo()
 
 	// Init services
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
@@ -41,6 +42,7 @@ func main() {
 	iconService := service.NewIconService(iconRepo)
 	configService := service.NewConfigService(configRepo)
 	behaviorService := service.NewBehaviorService(behaviorRepo)
+	imageService := service.NewImageService(imageRepo, "./uploads")
 
 	// Init handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -49,6 +51,7 @@ func main() {
 	configHandler := handler.NewConfigHandler(configService)
 	behaviorHandler := handler.NewBehaviorHandler(behaviorService)
 	uploadHandler := handler.NewUploadHandler("./uploads")
+	imageHandler := handler.NewImageHandler(imageService, "./uploads")
 
 	// Setup router
 	r := router.Setup(
@@ -58,6 +61,7 @@ func main() {
 		configHandler,
 		behaviorHandler,
 		uploadHandler,
+		imageHandler,
 		cfg.JWTSecret,
 	)
 

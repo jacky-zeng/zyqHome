@@ -27,6 +27,7 @@ type PublicConfig struct {
 	BackgroundColor   string `json:"background_color"`
 	DefaultSearch     string `json:"default_search"`
 	SearchPlaceholder string `json:"search_placeholder"`
+	FooterText        string `json:"footer_text"`
 	ShowCenterIcons   bool   `json:"show_center_icons"`
 	ShowRightMenu     bool   `json:"show_right_menu"`
 	IconColumns       int    `json:"icon_columns"`
@@ -40,6 +41,7 @@ func defaultPublicConfig() *PublicConfig {
 		BackgroundColor:   "#f0f2f5",
 		DefaultSearch:     "google",
 		SearchPlaceholder: "搜索...",
+		FooterText:        "",
 		ShowCenterIcons:   true,
 		ShowRightMenu:     true,
 		IconColumns:       5,
@@ -100,6 +102,8 @@ func applyConfig(cfg *PublicConfig, key, value string) {
 		cfg.DefaultSearch = value
 	case "search_placeholder":
 		cfg.SearchPlaceholder = value
+	case "footer_text":
+		cfg.FooterText = value
 	case "show_center_icons":
 		cfg.ShowCenterIcons, _ = strconv.ParseBool(value)
 	case "show_right_menu":

@@ -13,6 +13,7 @@ func Setup(
 	configHandler *handler.ConfigHandler,
 	behaviorHandler *handler.BehaviorHandler,
 	uploadHandler *handler.UploadHandler,
+	imageHandler *handler.ImageHandler,
 	jwtSecret string,
 ) *gin.Engine {
 	r := gin.Default()
@@ -65,6 +66,13 @@ func Setup(
 		// Config
 		admin.GET("/config", configHandler.GetAllConfigs)
 		admin.PUT("/config", configHandler.UpdateConfigs)
+
+		// Images
+		admin.GET("/images", imageHandler.GetList)
+		admin.GET("/images/categories", imageHandler.GetCategories)
+		admin.POST("/images", imageHandler.Upload)
+		admin.PUT("/images/:id", imageHandler.Update)
+		admin.DELETE("/images/:id", imageHandler.Delete)
 
 		// Upload
 		admin.POST("/upload", uploadHandler.Upload)

@@ -11,6 +11,7 @@ const menuItems = [
   { path: '/admin', label: '仪表盘', icon: 'DataBoard' },
   { path: '/admin/menus', label: '菜单管理', icon: 'Menu' },
   { path: '/admin/icons', label: '图标管理', icon: 'Grid' },
+  { path: '/admin/images', label: '图片管理', icon: 'Picture' },
   { path: '/admin/config', label: '站点配置', icon: 'Setting' },
 ]
 

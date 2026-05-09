@@ -28,6 +28,7 @@ func InitMySQL(cfg *config.Config) {
 		&model.CenterIcon{},
 		&model.SiteConfig{},
 		&model.UserBehavior{},
+		&model.Image{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)

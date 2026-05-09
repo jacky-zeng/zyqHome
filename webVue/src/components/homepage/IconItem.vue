@@ -18,7 +18,7 @@ function onClick() {
 
 <template>
   <div class="icon-item" @click="onClick">
-    <div class="icon-bg" :style="{ background: color }">
+    <div class="icon-bg" :style="{ background: icon.startsWith('http') || icon.startsWith('/') ? 'transparent' : color }">
       <img v-if="icon.startsWith('http') || icon.startsWith('/')" :src="icon" :alt="title" class="icon-img" />
       <span v-else class="icon-text">{{ title.charAt(0) }}</span>
     </div>
@@ -48,12 +48,21 @@ function onClick() {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
 .icon-img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 100%;
+  min-height: 100%;
+  width: 165%;
+  max-width: none;
+  object-fit: cover;
+  border-radius: 16px;
 }
 
 .icon-text {

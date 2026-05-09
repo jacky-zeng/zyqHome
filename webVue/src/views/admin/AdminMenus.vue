@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useMenuStore } from '@/stores/menuStore'
 import type { MenuItem } from '@/types'
+import { getIcon } from '@/icons'
+import IconPicker from '@/components/common/IconPicker.vue'
 
 const menuStore = useMenuStore()
 const menus = ref<MenuItem[]>([])
@@ -10,12 +12,12 @@ const loading = ref(false)
 const dialogVisible = ref(false)
 const editingItem = ref<Partial<MenuItem>>({})
 const isEdit = ref(false)
+const iconPickerVisible = ref(false)
 
 const defaultForm: Partial<MenuItem> = {
   title: '',
   url: '',
   icon: '',
-  parent_id: 0,
   sort_order: 0,
   is_active: true,
   target: '_blank',
@@ -89,6 +91,17 @@ async function handleDelete(id: number) {
     <el-card shadow="hover">
       <el-table :data="menus" v-loading="loading" row-key="id" style="width: 100%">
         <el-table-column prop="id" label="ID" width="60" />
+        <el-table-column label="图标" width="70">
+          <template #default="{ row }">
+            <component
+              v-if="row.icon && getIcon(row.icon)"
+              :is="getIcon(row.icon)"
+              :size="20"
+              style="color: #666; vertical-align: middle;"
+            />
+            <span v-else class="icon-placeholder">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="title" label="名称" min-width="120" />
         <el-table-column prop="url" label="链接" min-width="200">
           <template #default="{ row }">
@@ -126,10 +139,18 @@ async function handleDelete(id: number) {
           <el-input v-model="editingItem.url" placeholder="链接地址，留空则为分组" />
         </el-form-item>
         <el-form-item label="图标">
-          <el-input v-model="editingItem.icon" placeholder="图标类名" />
-        </el-form-item>
-        <el-form-item label="父级ID">
-          <el-input-number v-model="editingItem.parent_id" :min="0" />
+          <div class="icon-picker-trigger">
+            <el-button class="icon-select-btn" @click="iconPickerVisible = true">
+              <template v-if="editingItem.icon && getIcon(editingItem.icon)">
+                <component :is="getIcon(editingItem.icon)" :size="18" style="vertical-align: middle; margin-right: 4px;" />
+                <span>{{ editingItem.icon }}</span>
+              </template>
+              <span v-else>选择图标</span>
+            </el-button>
+            <el-button v-if="editingItem.icon" size="small" type="danger" link @click="editingItem.icon = ''">
+              清除
+            </el-button>
+          </div>
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="editingItem.sort_order" :min="0" />
@@ -149,6 +170,9 @@ async function handleDelete(id: number) {
         <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- Icon Picker -->
+    <IconPicker v-model="iconPickerVisible" @select="(name: string) => editingItem.icon = name" />
   </div>
 </template>
 
@@ -168,5 +192,19 @@ async function handleDelete(id: number) {
 .url-text {
   color: #409eff;
   font-size: 13px;
+}
+
+.icon-placeholder {
+  color: #ccc;
+}
+
+.icon-picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-select-btn {
+  min-width: 120px;
 }
 </style>
