@@ -2,8 +2,10 @@ package handler
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -61,7 +63,7 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 	}
 
 	// Validate file type
-	ext := filepath.Ext(file.Filename)
+	ext := strings.ToLower(filepath.Ext(file.Filename))
 	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true, ".svg": true, ".ico": true}
 	if !allowedExts[ext] {
 		response.BadRequest(c, "不支持的文件格式，仅支持 jpg/png/gif/webp/svg/ico")
@@ -132,6 +134,72 @@ func (h *ImageHandler) Update(c *gin.Context) {
 	}
 	if err := h.service.Update(image); err != nil {
 		response.ServerError(c, "更新图片失败")
+		return
+	}
+
+	response.Success(c, image)
+}
+
+func (h *ImageHandler) Crop(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的ID")
+		return
+	}
+
+	image, err := h.service.GetByID(uint(id))
+	if err != nil {
+		response.NotFound(c, "图片不存在")
+		return
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.BadRequest(c, "请上传裁剪后的图片文件")
+		return
+	}
+
+	// Validate file type
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true, ".svg": true, ".ico": true}
+	if !allowedExts[ext] {
+		response.BadRequest(c, "不支持的文件格式，仅支持 jpg/png/gif/webp/svg/ico")
+		return
+	}
+
+	// Validate file size (10MB max)
+	if file.Size > 10*1024*1024 {
+		response.BadRequest(c, "文件大小不能超过10MB")
+		return
+	}
+
+	// Delete old physical file
+	oldFilename := filepath.Base(image.URL)
+	oldPath := filepath.Join(h.uploadDir, oldFilename)
+	os.Remove(oldPath)
+
+	// Save new file
+	newFilename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+	savePath := filepath.Join(h.uploadDir, newFilename)
+	if err := c.SaveUploadedFile(file, savePath); err != nil {
+		response.ServerError(c, "保存裁剪图片失败")
+		return
+	}
+
+	// Update database record
+	image.URL = "/uploads/" + newFilename
+
+	category := c.PostForm("category")
+	if category != "" {
+		image.Category = category
+	}
+
+	if filename := c.PostForm("filename"); filename != "" {
+		image.Filename = filename
+	}
+
+	if err := h.service.Update(image); err != nil {
+		response.ServerError(c, "更新图片记录失败")
 		return
 	}
 

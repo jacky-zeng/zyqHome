@@ -72,6 +72,7 @@ func Setup(
 		admin.GET("/images/categories", imageHandler.GetCategories)
 		admin.POST("/images", imageHandler.Upload)
 		admin.PUT("/images/:id", imageHandler.Update)
+		admin.POST("/images/:id/crop", imageHandler.Crop)
 		admin.DELETE("/images/:id", imageHandler.Delete)
 
 		// Upload

@@ -25,7 +25,14 @@
       "Bash(pkill -f \"vite --port 5173\")",
       "Bash(grep -v '\\\\.sample$')",
       "Bash(git config *)",
-      "Bash(chmod +x /Users/zengyanqi/myProject/zyqHome/.githooks/post-commit)"
+      "Bash(chmod +x /Users/zengyanqi/myProject/zyqHome/.githooks/post-commit)",
+      "Bash(cat)",
+      "Bash(python3 /tmp/router_fix.py)",
+      "Bash(python3 /tmp/router_fix2.py)",
+      "Bash(python3 /tmp/router_fix3.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('version:', d.get\\('version'\\)\\); print\\('exports:', json.dumps\\(d.get\\('exports', {}\\), indent=2\\)\\)\")"
     ]
   }
 }

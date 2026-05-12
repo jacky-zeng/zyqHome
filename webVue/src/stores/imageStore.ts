@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { ImageItem } from '@/types'
-import { getImageListApi, getImageCategoriesApi, uploadImageApi, updateImageApi, deleteImageApi } from '@/api/image'
+import { getImageListApi, getImageCategoriesApi, uploadImageApi, updateImageApi, cropImageApi, deleteImageApi } from '@/api/image'
 
 export const useImageStore = defineStore('image', () => {
   const images = ref<ImageItem[]>([])
@@ -37,10 +37,15 @@ export const useImageStore = defineStore('image', () => {
     return res.data
   }
 
+  async function crop(id: number, file: File, data: { category: string; filename?: string }) {
+    const res = await cropImageApi(id, file, data)
+    return res.data
+  }
+
   async function remove(id: number) {
     const res = await deleteImageApi(id)
     return res.data
   }
 
-  return { images, total, page, categories, fetchList, fetchCategories, upload, update, remove }
+  return { images, total, page, categories, fetchList, fetchCategories, upload, update, crop, remove }
 })

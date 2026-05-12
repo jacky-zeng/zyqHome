@@ -24,6 +24,16 @@ export function updateImageApi(id: number, data: { category: string; filename?: 
   return request.put<ApiResponse<ImageItem>>(`/api/admin/images/${id}`, data)
 }
 
+export function cropImageApi(id: number, file: File, data: { category: string; filename?: string }) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('category', data.category)
+  if (data.filename) formData.append('filename', data.filename)
+  return request.post<ApiResponse<ImageItem>>(`/api/admin/images/${id}/crop`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
 export function deleteImageApi(id: number) {
   return request.delete<ApiResponse<null>>(`/api/admin/images/${id}`)
 }

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useImageStore } from '@/stores/imageStore'
 import type { ImageItem } from '@/types'
+import Cropper from 'cropperjs'
 
 const imageStore = useImageStore()
 const loading = ref(false)
@@ -17,6 +18,10 @@ const newCategory = ref('')
 const uploading = ref(false)
 const uploadFile = ref<File | null>(null)
 const uploadRef = ref()
+const cropperRef = ref<HTMLImageElement>()
+const cropperInstance = ref<Cropper>()
+const croppedFile = ref<File | null>()
+const hasCropped = ref(false)
 
 onMounted(async () => {
   await Promise.all([
@@ -92,8 +97,52 @@ function openEditDialog(item: ImageItem) {
   editingItem.value = item
   editCategory.value = item.category
   editFilename.value = item.filename
+  hasCropped.value = false
+  croppedFile.value = null
   editDialogVisible.value = true
+
+  nextTick(() => {
+    const img = cropperRef.value
+    if (!img) return
+    // Destroy previous instance
+    cropperInstance.value?.destroy()
+    cropperInstance.value = new Cropper(img, {
+      aspectRatio: NaN,
+      viewMode: 2,
+      dragMode: 'crop',
+      autoCrop: true,
+      autoCropArea: 1,
+    })
+    hasCropped.value = true
+  })
 }
+
+async function handleCropDone() {
+  const cropper = cropperInstance.value
+  if (!cropper) return
+  const selection = cropper.getCropperSelection()
+  if (!selection) return
+  try {
+    const canvas = await selection.$toCanvas()
+    canvas.toBlob((blob) => {
+      if (!blob || !editingItem.value) return
+      const typeToExt: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp' }
+      const ext = typeToExt[blob.type] || 'png'
+      croppedFile.value = new File([blob], `cropped.${ext}`, { type: blob.type })
+      ElMessage.success('裁剪完成，点击"保存"生效')
+    })
+  } catch {
+    ElMessage.error('裁剪失败')
+  }
+}
+
+function onEditDialogClose() {
+  cropperInstance.value?.destroy()
+  cropperInstance.value = undefined
+  hasCropped.value = false
+  croppedFile.value = null
+}
+
 
 async function handleEdit() {
   if (!editingItem.value) return
@@ -102,10 +151,16 @@ async function handleEdit() {
     return
   }
   try {
-    const result = await imageStore.update(editingItem.value.id, {
-      category: editCategory.value,
-      filename: editFilename.value.trim(),
-    })
+    const id = editingItem.value.id
+    const data = { category: editCategory.value, filename: editFilename.value.trim() }
+
+    let result
+    if (croppedFile.value) {
+      result = await imageStore.crop(id, croppedFile.value, data)
+    } else {
+      result = await imageStore.update(id, data)
+    }
+
     if (result.code === 0) {
       ElMessage.success('更新成功')
       editDialogVisible.value = false
@@ -272,29 +327,45 @@ function getImageUrl(url: string): string {
     <el-dialog
       v-model="editDialogVisible"
       title="编辑图片"
-      width="400px"
+      width="950px"
+      @close="onEditDialogClose"
     >
-      <el-form label-width="80px">
-        <el-form-item label="文件名" required>
-          <el-input v-model="editFilename" placeholder="文件名" />
-        </el-form-item>
-        <el-form-item label="分类">
-          <el-select
-            v-model="editCategory"
-            placeholder="选择或输入分类"
-            allow-create
-            filterable
-            clearable
-          >
-            <el-option
-              v-for="cat in imageStore.categories"
-              :key="cat"
-              :label="cat"
-              :value="cat"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
+      <div class="edit-dialog-body">
+        <div class="edit-dialog-cropper">
+          <img
+            v-if="editingItem"
+            ref="cropperRef"
+            :src="getImageUrl(editingItem.url)"
+            alt="裁剪预览"
+          />
+        </div>
+        <div class="edit-dialog-form">
+          <el-form label-width="80px">
+            <el-form-item label="文件名" required>
+              <el-input v-model="editFilename" placeholder="文件名" />
+            </el-form-item>
+            <el-form-item label="分类">
+              <el-select
+                v-model="editCategory"
+                placeholder="选择或输入分类"
+                allow-create
+                filterable
+                clearable
+              >
+                <el-option
+                  v-for="cat in imageStore.categories"
+                  :key="cat"
+                  :label="cat"
+                  :value="cat"
+                />
+              </el-select>
+            </el-form-item>
+          </el-form>
+          <el-button type="success" :disabled="!hasCropped" @click="handleCropDone" style="margin-top: 12px">
+            确认裁剪
+          </el-button>
+        </div>
+      </div>
       <template #footer>
         <el-button @click="editDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleEdit">保存</el-button>
@@ -405,5 +476,34 @@ function getImageUrl(url: string): string {
   font-size: 12px;
   color: #999;
   margin-top: 4px;
+}
+
+.edit-dialog-body {
+  display: flex;
+  gap: 20px;
+}
+
+.edit-dialog-cropper {
+  flex: 1;
+  min-width: 0;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 540px;
+  position: relative;
+}
+
+.edit-dialog-cropper img {
+  display: block;
+  max-width: 100%;
+}
+
+.edit-dialog-form {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.edit-dialog-cropper :deep(cropper-canvas) {
+  height: 100% !important;
 }
 </style>

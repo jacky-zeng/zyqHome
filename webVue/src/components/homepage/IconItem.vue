@@ -59,7 +59,7 @@ function onClick() {
   transform: translate(-50%, -50%);
   min-width: 100%;
   min-height: 100%;
-  width: 165%;
+  width: 100%;
   max-width: none;
   object-fit: cover;
   border-radius: 16px;
