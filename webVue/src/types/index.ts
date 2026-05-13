@@ -51,7 +51,10 @@ export interface User {
   id: number
   username: string
   nickname: string
+  email?: string
   avatar: string
+  role?: string
+  status?: number
   last_login_ip: string
   last_login_at: string
   created_at: string
@@ -88,4 +91,15 @@ export interface ImageListResponse {
   items: ImageItem[]
   total: number
   page: number
+}
+
+// User custom icon
+export interface UserIcon {
+  id: number
+  user_id: number
+  image_url: string
+  link_url: string
+  sort_order: number
+  created_at: string
+  updated_at: string
 }

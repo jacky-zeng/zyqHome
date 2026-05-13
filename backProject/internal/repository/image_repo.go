@@ -17,7 +17,25 @@ func (r *ImageRepo) FindAll(category string, page, pageSize int) ([]model.Image,
 	var images []model.Image
 	var total int64
 
-	query := database.DB.Model(&model.Image{})
+	query := database.DB.Model(&model.Image{}).Where("user_id = 0")
+	if category != "" {
+		query = query.Where("category = ?", category)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&images).Error
+	return images, total, err
+}
+
+func (r *ImageRepo) FindAllByUser(userID uint, category string, page, pageSize int) ([]model.Image, int64, error) {
+	var images []model.Image
+	var total int64
+
+	query := database.DB.Model(&model.Image{}).Where("user_id = ?", userID)
 	if category != "" {
 		query = query.Where("category = ?", category)
 	}
@@ -33,7 +51,13 @@ func (r *ImageRepo) FindAll(category string, page, pageSize int) ([]model.Image,
 
 func (r *ImageRepo) FindCategories() ([]string, error) {
 	var categories []string
-	err := database.DB.Model(&model.Image{}).Select("DISTINCT category").Order("category ASC").Pluck("category", &categories).Error
+	err := database.DB.Model(&model.Image{}).Where("user_id = 0").Select("DISTINCT category").Order("category ASC").Pluck("category", &categories).Error
+	return categories, err
+}
+
+func (r *ImageRepo) FindCategoriesByUser(userID uint) ([]string, error) {
+	var categories []string
+	err := database.DB.Model(&model.Image{}).Where("user_id = ?", userID).Select("DISTINCT category").Order("category ASC").Pluck("category", &categories).Error
 	return categories, err
 }
 

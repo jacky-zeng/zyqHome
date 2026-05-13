@@ -32,7 +32,28 @@
       "Bash(python3 /tmp/router_fix3.py)",
       "Bash(python3 -c ' *)",
       "Bash(python3)",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('version:', d.get\\('version'\\)\\); print\\('exports:', json.dumps\\(d.get\\('exports', {}\\), indent=2\\)\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('version:', d.get\\('version'\\)\\); print\\('exports:', json.dumps\\(d.get\\('exports', {}\\), indent=2\\)\\)\")",
+      "Bash(go run *)",
+      "Bash(curl -s -X POST http://localhost:8090/api/auth/register -H 'Content-Type: application/json' -d '{\"username\":\"testuser\",\"password\":\"pass123\",\"nickname\":\"测试用户\",\"email\":\"test@example.com\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:8090/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(curl -s -X POST http://localhost:8090/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"testuser\",\"password\":\"pass123\"}')",
+      "Bash(curl -s -X POST http://localhost:8090/api/auth/register -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"pass123\"}')",
+      "Bash(python3 -c \"import sys,json; print\\('Server ready'\\) if json.load\\(sys.stdin\\)['code']==0 else print\\('Server not ready'\\)\")",
+      "Bash(curl -s -X POST http://localhost:8090/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"member2\",\"password\":\"pass123\"}')",
+      "Bash(ls vite.config.*)",
+      "Bash(cat vite.config.*)",
+      "Bash(curl -s http://localhost:8090/api/user/images)",
+      "Bash(curl -s http://localhost:8090/api/user/images/categories)",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"cmd/server/main.go\")",
+      "Bash(pkill -f \"zyqHome\")",
+      "Read(//tmp/**)",
+      "Bash(xargs kill -9)",
+      "Read(//private/tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8090/api/user/images)",
+      "Bash(curl -s -X POST http://localhost:8090/api/auth/register -H 'Content-Type: application/json' -d '{\"username\":\"testuser123\",\"password\":\"test123\",\"nickname\":\"测试用户\"}')",
+      "Bash(curl -s -X POST http://localhost:8090/api/auth/register -H 'Content-Type: application/json' -d '{\"username\":\"testuser456\",\"password\":\"test123\",\"nickname\":\"测试用户\",\"email\":\"test@test.com\"}')"
     ]
   }
 }

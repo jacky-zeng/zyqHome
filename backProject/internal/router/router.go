@@ -14,6 +14,8 @@ func Setup(
 	behaviorHandler *handler.BehaviorHandler,
 	uploadHandler *handler.UploadHandler,
 	imageHandler *handler.ImageHandler,
+	userIconHandler *handler.UserIconHandler,
+	userImageHandler *handler.UserImageHandler,
 	jwtSecret string,
 ) *gin.Engine {
 	r := gin.Default()
@@ -37,17 +39,42 @@ func Setup(
 
 		// Auth
 		public.POST("/auth/login", authHandler.Login)
+		public.POST("/auth/register", authHandler.Register)
 	}
 
 	// Static files
 	r.Static("/uploads", "./uploads")
 
-	// Admin API (auth required)
+	// User API (auth required, any role)
+	user := r.Group("/api/user")
+	user.Use(middleware.AuthMiddleware(jwtSecret))
+	{
+		user.GET("/icons", userIconHandler.ListMyIcons)
+		user.POST("/icons", userIconHandler.CreateMyIcon)
+		user.DELETE("/icons/:id", userIconHandler.DeleteMyIcon)
+
+		// User images (members upload and manage their own images)
+		user.GET("/images", userImageHandler.ListMyImages)
+		user.GET("/images/categories", userImageHandler.GetMyCategories)
+		user.POST("/images", userImageHandler.Upload)
+		user.DELETE("/images/:id", userImageHandler.DeleteMyImage)
+	}
+
+	// Admin API (auth + admin role required)
 	admin := r.Group("/api/admin")
 	admin.Use(middleware.AuthMiddleware(jwtSecret))
+	admin.Use(middleware.AdminMiddleware())
 	{
 		// Auth
 		admin.GET("/auth/me", authHandler.Me)
+
+		// Members
+		admin.GET("/members", authHandler.MemberList)
+		admin.GET("/members/:id", authHandler.MemberDetail)
+		admin.PUT("/members/:id/status", authHandler.UpdateMemberStatus)
+
+			// User icons
+			admin.GET("/users/:id/icons", userIconHandler.AdminGetUserIcons)
 
 		// Menus
 		admin.GET("/menus", menuHandler.GetAllMenus)

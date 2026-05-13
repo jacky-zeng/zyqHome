@@ -41,6 +41,11 @@ const router = createRouter({
           component: () => import('@/views/admin/AdminImages.vue'),
         },
         {
+          path: 'members',
+          name: 'admin-members',
+          component: () => import('@/views/admin/AdminMembers.vue'),
+        },
+        {
           path: 'config',
           name: 'admin-config',
           component: () => import('@/views/admin/AdminConfig.vue'),
@@ -52,8 +57,15 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
-  if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
+  if (to.meta.requiresAuth) {
+    if (!authStore.isLoggedIn) {
+      next({ name: 'login', query: { redirect: to.fullPath } })
+    } else if (authStore.user?.role !== 'admin') {
+      // 会员不允许进入管理后台
+      next({ name: 'home' })
+    } else {
+      next()
+    }
   } else {
     next()
   }

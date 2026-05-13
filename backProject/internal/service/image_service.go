@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -27,8 +28,22 @@ func (s *ImageService) GetList(category string, page, pageSize int) ([]model.Ima
 	return s.repo.FindAll(category, page, pageSize)
 }
 
+func (s *ImageService) GetUserList(userID uint, category string, page, pageSize int) ([]model.Image, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+	return s.repo.FindAllByUser(userID, category, page, pageSize)
+}
+
 func (s *ImageService) GetCategories() ([]string, error) {
 	return s.repo.FindCategories()
+}
+
+func (s *ImageService) GetUserCategories(userID uint) ([]string, error) {
+	return s.repo.FindCategoriesByUser(userID)
 }
 
 func (s *ImageService) GetByID(id uint) (*model.Image, error) {
@@ -55,4 +70,20 @@ func (s *ImageService) Delete(id uint) error {
 	os.Remove(filePath)
 
 	return s.repo.Delete(id)
+}
+
+func (s *ImageService) DeleteByUser(userID, imageID uint) error {
+	img, err := s.repo.FindByID(imageID)
+	if err != nil {
+		return err
+	}
+	if img.UserID != userID {
+		return errors.New("无权删除该图片")
+	}
+
+	filename := filepath.Base(img.URL)
+	filePath := filepath.Join(s.uploadDir, filename)
+	os.Remove(filePath)
+
+	return s.repo.Delete(imageID)
 }

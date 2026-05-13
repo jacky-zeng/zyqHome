@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useImageStore } from '@/stores/imageStore'
+import { useUserImageStore } from '@/stores/userImageStore'
 import type { ImageItem } from '@/types'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
   selectedUrl?: string
+  mode?: 'admin' | 'user'
 }>(), {
   selectedUrl: '',
+  mode: 'admin',
 })
 
 const emit = defineEmits<{
@@ -16,7 +19,10 @@ const emit = defineEmits<{
   select: [url: string]
 }>()
 
-const imageStore = useImageStore()
+const adminStore = useImageStore()
+const userStore = useUserImageStore()
+const store = computed(() => props.mode === 'admin' ? adminStore : userStore)
+
 const loading = ref(false)
 const currentCategory = ref('')
 const selectedImage = ref('')
@@ -28,7 +34,7 @@ const uploadFile = ref<File | null>(null)
 const uploadCategory = ref('')
 const uploadRef = ref()
 
-// Edit
+// Edit (only available in admin mode)
 const editDialogVisible = ref(false)
 const editingItem = ref<ImageItem | null>(null)
 const editCategory = ref('')
@@ -37,7 +43,7 @@ const editFilename = ref('')
 onMounted(async () => {
   await Promise.all([
     loadImages(),
-    imageStore.fetchCategories(),
+    store.value.fetchCategories(),
   ])
 })
 
@@ -45,14 +51,14 @@ watch(() => props.modelValue, (val) => {
   if (val) {
     selectedImage.value = props.selectedUrl
     loadImages()
-    imageStore.fetchCategories()
+    store.value.fetchCategories()
   }
 })
 
 async function loadImages() {
   loading.value = true
   try {
-    await imageStore.fetchList(currentCategory.value, 1, 50)
+    await store.value.fetchList(currentCategory.value, 1, 50)
   } finally {
     loading.value = false
   }
@@ -77,6 +83,10 @@ function confirm() {
 function close() {
   emit('update:modelValue', false)
 }
+
+const uploadTipText = computed(() =>
+  props.mode === 'admin' ? '支持 jpg/png/gif/webp/svg/ico，最大 10MB' : '支持 jpg/png/gif/webp/svg/ico，最大 500KB'
+)
 
 function getImageUrl(url: string): string {
   if (url.startsWith('http')) return url
@@ -106,13 +116,13 @@ async function handleUpload() {
   }
   uploading.value = true
   try {
-    const result = await imageStore.upload(uploadFile.value, uploadCategory.value)
+    const result = await store.value.upload(uploadFile.value, uploadCategory.value)
     if (result.code === 0) {
       ElMessage.success('上传成功')
       uploadDialogVisible.value = false
       if (uploadRef.value) uploadRef.value.clearFiles()
       await loadImages()
-      await imageStore.fetchCategories()
+      await store.value.fetchCategories()
     } else {
       ElMessage.error(result.message || '上传失败')
     }
@@ -123,8 +133,9 @@ async function handleUpload() {
   }
 }
 
-// Edit
+// Edit (admin only)
 function openEditDialog(item: ImageItem) {
+  if (props.mode !== 'admin') return
   editingItem.value = item
   editCategory.value = item.category
   editFilename.value = item.filename
@@ -138,7 +149,7 @@ async function handleEdit() {
     return
   }
   try {
-    const result = await imageStore.update(editingItem.value.id, {
+    const result = await store.value.update(editingItem.value.id, {
       category: editCategory.value,
       filename: editFilename.value.trim(),
     })
@@ -146,7 +157,7 @@ async function handleEdit() {
       ElMessage.success('更新成功')
       editDialogVisible.value = false
       await loadImages()
-      await imageStore.fetchCategories()
+      await store.value.fetchCategories()
     } else {
       ElMessage.error(result.message || '更新失败')
     }
@@ -163,14 +174,14 @@ async function handleDelete(item: ImageItem) {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    const result = await imageStore.remove(item.id)
+    const result = await store.value.remove(item.id)
     if (result.code === 0) {
       ElMessage.success('删除成功')
       if (selectedImage.value === item.url) {
         selectedImage.value = ''
       }
       await loadImages()
-      await imageStore.fetchCategories()
+      await store.value.fetchCategories()
     } else {
       ElMessage.error(result.message || '删除失败')
     }
@@ -190,7 +201,7 @@ function copyUrl(url: string) {
 <template>
   <el-dialog
     :model-value="modelValue"
-    title="图片管理"
+    :title="mode === 'admin' ? '图片管理' : '我的图库'"
     width="750px"
     top="5vh"
     @close="close"
@@ -202,7 +213,7 @@ function copyUrl(url: string) {
         <el-radio-group :model-value="currentCategory" @change="onCategoryChange" size="small">
           <el-radio-button label="" value="">全部</el-radio-button>
           <el-radio-button
-            v-for="cat in imageStore.categories"
+            v-for="cat in store.categories"
             :key="cat"
             :label="cat"
             :value="cat"
@@ -217,7 +228,7 @@ function copyUrl(url: string) {
     <!-- Image grid -->
     <div v-loading="loading" class="image-grid">
       <div
-        v-for="item in imageStore.images"
+        v-for="item in store.images"
         :key="item.id"
         class="image-card"
         :class="{ selected: selectedImage === item.url }"
@@ -237,14 +248,14 @@ function copyUrl(url: string) {
         </div>
         <div class="image-actions-overlay">
           <el-button link size="small" @click.stop="copyUrl(item.url)">复制</el-button>
-          <el-button link size="small" @click.stop="openEditDialog(item)">编辑</el-button>
+          <el-button v-if="mode === 'admin'" link size="small" @click.stop="openEditDialog(item)">编辑</el-button>
           <el-button link size="small" type="danger" @click.stop="handleDelete(item)">删除</el-button>
         </div>
         <div class="check-mark" v-if="selectedImage === item.url">
           <el-icon color="#409eff" size="20"><Check /></el-icon>
         </div>
       </div>
-      <div v-if="imageStore.images.length === 0 && !loading" class="empty-state">
+      <div v-if="store.images.length === 0 && !loading" class="empty-state">
         <el-empty description="暂无图片" :image-size="80" />
       </div>
     </div>
@@ -277,7 +288,7 @@ function copyUrl(url: string) {
             <el-button type="primary" size="small">选择文件</el-button>
           </template>
           <template #tip>
-            <div class="upload-tip">支持 jpg/png/gif/webp/svg/ico，最大 10MB</div>
+            <div class="upload-tip">{{ uploadTipText }}</div>
           </template>
         </el-upload>
       </el-form-item>
@@ -291,7 +302,7 @@ function copyUrl(url: string) {
           clearable
         >
           <el-option
-            v-for="cat in imageStore.categories"
+            v-for="cat in store.categories"
             :key="cat"
             :label="cat"
             :value="cat"
@@ -305,8 +316,9 @@ function copyUrl(url: string) {
     </template>
   </el-dialog>
 
-  <!-- Edit Dialog -->
+  <!-- Edit Dialog (admin only) -->
   <el-dialog
+    v-if="mode === 'admin'"
     v-model="editDialogVisible"
     title="编辑图片"
     width="400px"
@@ -327,7 +339,7 @@ function copyUrl(url: string) {
           clearable
         >
           <el-option
-            v-for="cat in imageStore.categories"
+            v-for="cat in store.categories"
             :key="cat"
             :label="cat"
             :value="cat"

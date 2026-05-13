@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { User } from '@/types'
-import { getMeApi, loginApi } from '@/api/auth'
+import { getMeApi, loginApi, registerApi } from '@/api/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || '')
-  const user = ref<User | null>(null)
+  const savedUser = localStorage.getItem('user')
+  const user = ref<User | null>(savedUser ? JSON.parse(savedUser) : null)
 
   const isLoggedIn = computed(() => !!token.value)
 
@@ -15,6 +16,18 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = res.data.data.token
       user.value = res.data.data.user
       localStorage.setItem('token', res.data.data.token)
+      localStorage.setItem('user', JSON.stringify(res.data.data.user))
+    }
+    return res.data
+  }
+
+  async function register(data: { email: string; password: string }) {
+    const res = await registerApi(data)
+    if (res.data.code === 0) {
+      token.value = res.data.data.token
+      user.value = res.data.data.user
+      localStorage.setItem('token', res.data.data.token)
+      localStorage.setItem('user', JSON.stringify(res.data.data.user))
     }
     return res.data
   }
@@ -25,6 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
       const res = await getMeApi()
       if (res.data.code === 0) {
         user.value = res.data.data
+        localStorage.setItem('user', JSON.stringify(res.data.data))
       }
     } catch {
       logout()
@@ -35,7 +49,8 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = ''
     user.value = null
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
   }
 
-  return { token, user, isLoggedIn, login, fetchUser, logout }
+  return { token, user, isLoggedIn, login, register, fetchUser, logout }
 })

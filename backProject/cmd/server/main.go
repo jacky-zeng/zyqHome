@@ -28,6 +28,9 @@ func main() {
 	// Seed default admin user if not exists
 	seedDefaultAdmin()
 
+	// Migrate existing users: set empty role to "admin" (backward compatibility)
+	database.DB.Model(&model.User{}).Where("role = '' OR role IS NULL").Update("role", "admin")
+
 	// Init repositories
 	userRepo := repository.NewUserRepo()
 	menuRepo := repository.NewMenuRepo()
@@ -35,6 +38,7 @@ func main() {
 	configRepo := repository.NewConfigRepo()
 	behaviorRepo := repository.NewBehaviorRepo()
 	imageRepo := repository.NewImageRepo()
+	userIconRepo := repository.NewUserIconRepo()
 
 	// Init services
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
@@ -43,6 +47,7 @@ func main() {
 	configService := service.NewConfigService(configRepo)
 	behaviorService := service.NewBehaviorService(behaviorRepo)
 	imageService := service.NewImageService(imageRepo, "./uploads")
+	userIconService := service.NewUserIconService(userIconRepo)
 
 	// Init handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -52,6 +57,8 @@ func main() {
 	behaviorHandler := handler.NewBehaviorHandler(behaviorService)
 	uploadHandler := handler.NewUploadHandler("./uploads")
 	imageHandler := handler.NewImageHandler(imageService, "./uploads")
+	userIconHandler := handler.NewUserIconHandler(userIconService)
+	userImageHandler := handler.NewUserImageHandler(imageService, "./uploads")
 
 	// Setup router
 	r := router.Setup(
@@ -62,6 +69,8 @@ func main() {
 		behaviorHandler,
 		uploadHandler,
 		imageHandler,
+		userIconHandler,
+		userImageHandler,
 		cfg.JWTSecret,
 	)
 
@@ -84,6 +93,7 @@ func seedDefaultAdmin() {
 			Username: "admin",
 			Password: hashedPassword,
 			Nickname: "管理员",
+			Role:     "admin",
 		}
 		if err := database.DB.Create(admin).Error; err != nil {
 			log.Fatalf("Failed to seed admin: %v", err)
