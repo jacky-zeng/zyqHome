@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"zyqHome/backProject/internal/database"
+	"zyqHome/backProject/internal/model"
 	jwtpkg "zyqHome/backProject/pkg/jwt"
 	"zyqHome/backProject/pkg/response"
 )
@@ -27,6 +29,14 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		claims, err := jwtpkg.ParseToken(parts[1], jwtSecret)
 		if err != nil {
 			response.Unauthorized(c, "认证令牌无效或已过期")
+			c.Abort()
+			return
+		}
+
+		// 检查用户是否被禁用
+		var user model.User
+		if err := database.DB.First(&user, claims.UserID).Error; err != nil || user.Status != 1 {
+			response.Unauthorized(c, "账号已被禁用")
 			c.Abort()
 			return
 		}

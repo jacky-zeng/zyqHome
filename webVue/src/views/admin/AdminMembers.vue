@@ -79,6 +79,14 @@ function onPageChange(newPage: number) {
   fetchMembers()
 }
 
+function formatDate(dateStr: string | undefined | null): string {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return '-'
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+}
+
 onMounted(fetchMembers)
 </script>
 
@@ -105,8 +113,12 @@ onMounted(fetchMembers)
           </template>
         </el-table-column>
         <el-table-column prop="last_login_ip" label="最后登录IP" width="140" />
-        <el-table-column prop="last_login_at" label="最后登录时间" width="170" />
-        <el-table-column prop="created_at" label="注册时间" width="170" />
+        <el-table-column label="最后登录时间" width="170">
+	          <template #default="{ row }">{{ formatDate(row.last_login_at) }}</template>
+	        </el-table-column>
+        <el-table-column label="注册时间" width="170">
+	          <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
+	        </el-table-column>
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button text type="primary" size="small" @click="showDetail(row.id)">
@@ -139,7 +151,7 @@ onMounted(fetchMembers)
     <el-dialog
       v-model="detailVisible"
       title="会员详情"
-      width="550px"
+      width="825px"
     >
       <el-descriptions v-if="detailUser" :column="2" border>
         <el-descriptions-item label="ID" :span="1">{{ detailUser.id }}</el-descriptions-item>
@@ -151,9 +163,9 @@ onMounted(fetchMembers)
             {{ detailUser.status === 1 ? '正常' : '禁用' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="注册时间" :span="1">{{ detailUser.created_at }}</el-descriptions-item>
+        <el-descriptions-item label="注册时间" :span="1">{{ formatDate(detailUser.created_at) }}</el-descriptions-item>
         <el-descriptions-item label="最后登录IP" :span="2">{{ detailUser.last_login_ip || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="最后登录时间" :span="2">{{ detailUser.last_login_at || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="最后登录时间" :span="2">{{ formatDate(detailUser.last_login_at) }}</el-descriptions-item>
       </el-descriptions>
 
       <!-- 自定义图标 -->
@@ -177,7 +189,7 @@ onMounted(fetchMembers)
             </template>
           </el-table-column>
           <el-table-column label="创建时间" width="160">
-            <template #default="{ row }">{{ row.created_at }}</template>
+            <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
           </el-table-column>
         </el-table>
       </div>

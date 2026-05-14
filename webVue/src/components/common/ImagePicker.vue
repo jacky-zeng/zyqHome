@@ -202,7 +202,7 @@ function copyUrl(url: string) {
   <el-dialog
     :model-value="modelValue"
     :title="mode === 'admin' ? '图片管理' : '我的图库'"
-    width="750px"
+    width="1125px"
     top="5vh"
     @close="close"
     destroy-on-close
@@ -372,7 +372,7 @@ function copyUrl(url: string) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 12px;
-  max-height: 400px;
+  max-height: 600px;
   overflow-y: auto;
   min-height: 150px;
 }

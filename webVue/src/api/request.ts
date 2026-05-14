@@ -26,7 +26,6 @@ request.interceptors.response.use(
     if (data.code === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
     }
     if (data.code === 403) {
       console.warn('403 Forbidden:', response.config?.url)

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -58,6 +59,17 @@ func (h *UserImageHandler) GetMyCategories(c *gin.Context) {
 func (h *UserImageHandler) Upload(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
+	// Limit: max 60 images per user
+	count, err := h.service.CountByUser(userID.(uint))
+	if err != nil {
+		response.ServerError(c, "查询图片数量失败")
+		return
+	}
+	if count >= 60 {
+		response.BadRequest(c, "图片数量已达上限（最多60张）")
+		return
+	}
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		response.BadRequest(c, "请选择要上传的文件")
@@ -80,7 +92,13 @@ func (h *UserImageHandler) Upload(c *gin.Context) {
 
 	// Generate unique filename
 	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-	savePath := filepath.Join(h.uploadDir, filename)
+	userDir := strconv.FormatUint(uint64(userID.(uint)), 10)
+	saveDir := filepath.Join(h.uploadDir, userDir)
+	if err := os.MkdirAll(saveDir, 0755); err != nil {
+		response.ServerError(c, "创建目录失败")
+		return
+	}
+	savePath := filepath.Join(saveDir, filename)
 
 	if err := c.SaveUploadedFile(file, savePath); err != nil {
 		response.ServerError(c, "文件上传失败")
@@ -99,7 +117,7 @@ func (h *UserImageHandler) Upload(c *gin.Context) {
 	image := &model.Image{
 		UserID:   userID.(uint),
 		Filename: file.Filename,
-		URL:      "/uploads/" + filename,
+		URL:      "/uploads/" + userDir + "/" + filename,
 		Category: category,
 	}
 

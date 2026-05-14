@@ -11,13 +11,23 @@ const showImagePicker = ref(false)
 const saving = ref(false)
 
 const form = reactive({
+  title: '',
   image_url: '',
   link_url: '',
 })
 
 function resetForm() {
+  form.title = ''
   form.image_url = ''
   form.link_url = ''
+}
+
+function openImagePicker() {
+  if (form.image_url) {
+    // 重新选择时清空
+    form.image_url = ''
+  }
+  showImagePicker.value = true
 }
 
 function onImageSelected(url: string) {
@@ -25,8 +35,12 @@ function onImageSelected(url: string) {
 }
 
 async function handleAdd() {
+  if (!form.title) {
+    ElMessage.warning('请输入图标名称')
+    return
+  }
   if (!form.image_url) {
-    ElMessage.warning('请选择或输入图片URL')
+    ElMessage.warning('请选择图片')
     return
   }
   if (!form.link_url) {
@@ -37,6 +51,7 @@ async function handleAdd() {
   saving.value = true
   try {
     const result = await userIconStore.create({
+      title: form.title,
       image_url: form.image_url,
       link_url: form.link_url,
     })
@@ -90,7 +105,10 @@ async function handleDelete(id: number) {
         class="icon-item"
       >
         <a :href="icon.link_url" target="_blank" rel="noopener noreferrer" class="icon-link">
-          <el-image :src="icon.image_url" fit="cover" class="icon-img" />
+          <div class="icon-bg">
+            <img :src="icon.image_url" :alt="icon.title" class="icon-img" />
+          </div>
+          <span class="icon-title">{{ icon.title }}</span>
         </a>
         <button class="delete-btn" title="删除" @click="handleDelete(icon.id)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -109,18 +127,30 @@ async function handleDelete(id: number) {
     <el-dialog
       v-model="showAddDialog"
       title="添加图标"
-      width="450px"
+      width="480px"
       :close-on-click-modal="false"
       destroy-on-close
       @closed="resetForm"
     >
-      <el-form label-width="90px">
-        <el-form-item label="图片URL" required>
-          <el-input v-model="form.image_url" placeholder="输入图片URL或从图库选择">
-            <template #append>
-              <el-button @click="showImagePicker = true">选择</el-button>
-            </template>
-          </el-input>
+      <el-form label-width="80px">
+        <el-form-item label="名称" required>
+          <el-input v-model="form.title" placeholder="请输入图标名称" />
+        </el-form-item>
+        <el-form-item label="图标" required>
+          <div class="image-select-wrapper">
+            <div v-if="form.image_url" class="selected-image" @click="openImagePicker">
+              <img :src="form.image_url" alt="已选图片" />
+              <div class="selected-image-overlay">点击更换</div>
+            </div>
+            <div v-else class="image-placeholder" @click="openImagePicker">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              <span>点击选择图片</span>
+            </div>
+          </div>
         </el-form-item>
         <el-form-item label="跳转URL" required>
           <el-input v-model="form.link_url" placeholder="输入点击后跳转的链接" />
@@ -132,7 +162,7 @@ async function handleDelete(id: number) {
       </template>
     </el-dialog>
 
-    <!-- 图片选择器（按需挂载，避免未登录时请求管理后台 API） -->
+    <!-- 图片选择器 -->
     <ImagePicker v-if="showImagePicker" v-model="showImagePicker" mode="user" @select="onImageSelected" />
   </div>
 </template>
@@ -159,44 +189,69 @@ async function handleDelete(id: number) {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* ===== 图标卡片样式 ===== */
 .icons-grid {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   position: relative;
-  aspect-ratio: 1;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.icon-item:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .icon-link {
-  display: block;
-  width: 100%;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.icon-link:hover {
+  transform: translateY(-5px);
+}
+
+.icon-bg {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .icon-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 12px;
 }
 
+.icon-title {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+/* ===== 删除按钮 ===== */
 .delete-btn {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: -4px;
+  right: -4px;
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -210,6 +265,7 @@ async function handleDelete(id: number) {
   opacity: 0;
   transition: opacity 0.2s, background 0.2s;
   padding: 4px;
+  z-index: 10;
 }
 
 .icon-item:hover .delete-btn {
@@ -225,6 +281,7 @@ async function handleDelete(id: number) {
   height: 12px;
 }
 
+/* ===== 空状态 ===== */
 .empty-hint {
   text-align: center;
   padding: 60px 20px;
@@ -233,5 +290,77 @@ async function handleDelete(id: number) {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   border: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+/* ===== 添加弹窗：图片选择 ===== */
+.image-select-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+.selected-image {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid #409eff;
+  transition: border-color 0.2s;
+}
+
+.selected-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.selected-image:hover .selected-image-overlay {
+  opacity: 1;
+}
+
+.image-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  border: 2px dashed #dcdfe6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  color: #999;
+  background: #fafafa;
+}
+
+.image-placeholder:hover {
+  border-color: #409eff;
+  color: #409eff;
+  background: #ecf5ff;
+}
+
+.image-placeholder svg {
+  width: 28px;
+  height: 28px;
+}
+
+.image-placeholder span {
+  font-size: 12px;
 }
 </style>

@@ -18,7 +18,10 @@ func (s *UserIconService) GetUserIcons(userID uint) ([]model.UserIcon, error) {
 	return s.repo.FindByUserID(userID)
 }
 
-func (s *UserIconService) Create(userID uint, imageURL, linkURL string) (*model.UserIcon, error) {
+func (s *UserIconService) Create(userID uint, title, imageURL, linkURL string) (*model.UserIcon, error) {
+	if title == "" {
+		return nil, errors.New("标题不能为空")
+	}
 	if imageURL == "" {
 		return nil, errors.New("图片URL不能为空")
 	}
@@ -27,6 +30,7 @@ func (s *UserIconService) Create(userID uint, imageURL, linkURL string) (*model.
 	}
 	icon := &model.UserIcon{
 		UserID:   userID,
+		Title:    title,
 		ImageURL: imageURL,
 		LinkURL:  linkURL,
 	}

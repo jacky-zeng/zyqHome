@@ -15,6 +15,12 @@ const editingItem = ref<Partial<CenterIcon>>({})
 const isEdit = ref(false)
 const iconPickerVisible = ref(false)
 const iconFieldTarget = ref<'icon' | 'color'>('icon')
+const selectedMenuId = ref<number>(0)
+
+const filteredIcons = computed(() => {
+  if (selectedMenuId.value === 0) return icons.value
+  return icons.value.filter(i => i.menu_id === selectedMenuId.value)
+})
 
 const defaultForm: Partial<CenterIcon> = {
   title: '',
@@ -112,8 +118,21 @@ async function handleDelete(id: number) {
       <el-button type="primary" @click="openCreate">添加图标</el-button>
     </div>
 
+    <div class="menu-tabs">
+      <el-radio-group v-model="selectedMenuId" size="small">
+        <el-radio-button :value="0">全部</el-radio-button>
+        <el-radio-button
+          v-for="menu in allMenus"
+          :key="menu.id"
+          :value="menu.id"
+        >
+          {{ menu.title }}
+        </el-radio-button>
+      </el-radio-group>
+    </div>
+
     <el-card shadow="hover">
-      <el-table :data="icons" v-loading="loading" row-key="id" style="width: 100%">
+      <el-table :data="filteredIcons" v-loading="loading" row-key="id" style="width: 100%">
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column label="预览" width="80">
           <template #default="{ row }">
@@ -174,12 +193,22 @@ async function handleDelete(id: number) {
         <el-form-item label="链接" required>
           <el-input v-model="editingItem.url" placeholder="跳转链接" />
         </el-form-item>
-        <el-form-item label="图标URL">
-          <el-input v-model="editingItem.icon" placeholder="图标图片URL，留空显示首字">
-            <template #append>
-              <el-button @click="openIconPicker">选择</el-button>
-            </template>
-          </el-input>
+        <el-form-item label="图标">
+          <div class="icon-select-wrapper">
+            <div v-if="editingItem.icon" class="icon-selected" @click="openIconPicker">
+              <img :src="editingItem.icon" alt="图标" />
+              <div class="icon-selected-overlay">点击更换</div>
+            </div>
+            <div v-else class="icon-placeholder" @click="openIconPicker">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              <span>点击选择图片</span>
+            </div>
+          </div>
+          <div class="form-tip">留空则显示首字 + 背景色</div>
         </el-form-item>
         <el-form-item label="背景色">
           <el-color-picker v-model="editingItem.color" />
@@ -227,6 +256,11 @@ async function handleDelete(id: number) {
   color: #333;
 }
 
+/* ===== 关联菜单分类 tab ===== */
+.menu-tabs {
+  margin-bottom: 16px;
+}
+
 .icon-preview {
   width: 32px;
   height: 32px;
@@ -269,5 +303,77 @@ async function handleDelete(id: number) {
   font-size: 12px;
   color: #999;
   margin-top: 4px;
+}
+
+/* ===== 图标选择器（替代 URL 输入框） ===== */
+.icon-select-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+.icon-selected {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid #409eff;
+  transition: border-color 0.2s;
+}
+
+.icon-selected img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.icon-selected-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.icon-selected:hover .icon-selected-overlay {
+  opacity: 1;
+}
+
+.icon-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  border: 2px dashed #dcdfe6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  color: #999;
+  background: #fafafa;
+}
+
+.icon-placeholder:hover {
+  border-color: #409eff;
+  color: #409eff;
+  background: #ecf5ff;
+}
+
+.icon-placeholder svg {
+  width: 24px;
+  height: 24px;
+}
+
+.icon-placeholder span {
+  font-size: 12px;
 }
 </style>

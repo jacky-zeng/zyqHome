@@ -32,6 +32,7 @@ func (h *UserIconHandler) ListMyIcons(c *gin.Context) {
 }
 
 type CreateUserIconRequest struct {
+	Title    string `json:"title" binding:"required"`
 	ImageURL string `json:"image_url" binding:"required"`
 	LinkURL  string `json:"link_url" binding:"required"`
 }
@@ -40,11 +41,11 @@ type CreateUserIconRequest struct {
 func (h *UserIconHandler) CreateMyIcon(c *gin.Context) {
 	var req CreateUserIconRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "请提供图片URL和跳转URL")
+		response.BadRequest(c, "请提供标题、图片URL和跳转URL")
 		return
 	}
 	userID, _ := c.Get("user_id")
-	icon, err := h.service.Create(userID.(uint), req.ImageURL, req.LinkURL)
+	icon, err := h.service.Create(userID.(uint), req.Title, req.ImageURL, req.LinkURL)
 	if err != nil {
 		response.BadRequest(c, err.Error())
 		return

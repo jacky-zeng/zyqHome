@@ -49,6 +49,12 @@ func (r *ImageRepo) FindAllByUser(userID uint, category string, page, pageSize i
 	return images, total, err
 }
 
+func (r *ImageRepo) CountByUser(userID uint) (int64, error) {
+	var total int64
+	err := database.DB.Model(&model.Image{}).Where("user_id = ?", userID).Count(&total).Error
+	return total, err
+}
+
 func (r *ImageRepo) FindCategories() ([]string, error) {
 	var categories []string
 	err := database.DB.Model(&model.Image{}).Where("user_id = 0").Select("DISTINCT category").Order("category ASC").Pluck("category", &categories).Error

@@ -17,7 +17,7 @@ export const useUserIconStore = defineStore('userIcon', () => {
     }
   }
 
-  async function create(data: { image_url: string; link_url: string }) {
+  async function create(data: { title: string; image_url: string; link_url: string }) {
     const res = await createUserIconApi(data)
     if (res.data.code === 0) {
       icons.value.push(res.data.data)

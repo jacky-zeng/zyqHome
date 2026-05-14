@@ -9,6 +9,35 @@ import (
 	"zyqHome/backProject/pkg/response"
 )
 
+// PublicMenuResponse 公开接口返回的菜单字段，隐藏内部字段
+type PublicMenuResponse struct {
+	ID       uint                 `json:"id"`
+	Title    string               `json:"title"`
+	URL      string               `json:"url"`
+	Icon     string               `json:"icon"`
+	ParentID uint                 `json:"parent_id"`
+	Target   string               `json:"target"`
+	Children []PublicMenuResponse `json:"children,omitempty"`
+}
+
+func toPublicMenu(item model.MenuItem) PublicMenuResponse {
+	resp := PublicMenuResponse{
+		ID:       item.ID,
+		Title:    item.Title,
+		URL:      item.URL,
+		Icon:     item.Icon,
+		ParentID: item.ParentID,
+		Target:   item.Target,
+	}
+	if len(item.Children) > 0 {
+		resp.Children = make([]PublicMenuResponse, len(item.Children))
+		for i, child := range item.Children {
+			resp.Children[i] = toPublicMenu(child)
+		}
+	}
+	return resp
+}
+
 type MenuHandler struct {
 	service *service.MenuService
 }
@@ -24,7 +53,12 @@ func (h *MenuHandler) GetActiveMenus(c *gin.Context) {
 		response.ServerError(c, "获取菜单失败")
 		return
 	}
-	response.Success(c, menus)
+
+	result := make([]PublicMenuResponse, len(menus))
+	for i, menu := range menus {
+		result[i] = toPublicMenu(menu)
+	}
+	response.Success(c, result)
 }
 
 // GetAllMenus is the admin API - returns all menus

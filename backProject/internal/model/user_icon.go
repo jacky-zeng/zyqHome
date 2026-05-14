@@ -5,6 +5,7 @@ import "time"
 type UserIcon struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
 	UserID    uint      `gorm:"index;not null" json:"user_id"`
+	Title     string    `gorm:"size:100;not null" json:"title"`
 	ImageURL  string    `gorm:"size:500;not null" json:"image_url"`
 	LinkURL   string    `gorm:"size:500;not null" json:"link_url"`
 	SortOrder int       `gorm:"default:0" json:"sort_order"`

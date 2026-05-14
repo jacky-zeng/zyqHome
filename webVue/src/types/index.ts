@@ -97,6 +97,7 @@ export interface ImageListResponse {
 export interface UserIcon {
   id: number
   user_id: number
+  title: string
   image_url: string
   link_url: string
   sort_order: number

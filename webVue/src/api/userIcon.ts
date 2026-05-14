@@ -5,7 +5,7 @@ export function getUserIconsApi() {
   return request.get<ApiResponse<UserIcon[]>>('/api/user/icons')
 }
 
-export function createUserIconApi(data: { image_url: string; link_url: string }) {
+export function createUserIconApi(data: { title: string; image_url: string; link_url: string }) {
   return request.post<ApiResponse<UserIcon>>('/api/user/icons', data)
 }
 

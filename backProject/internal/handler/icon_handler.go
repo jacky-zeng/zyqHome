@@ -9,6 +9,25 @@ import (
 	"zyqHome/backProject/pkg/response"
 )
 
+// PublicIconResponse 公开接口返回的图标字段，隐藏内部字段
+type PublicIconResponse struct {
+	ID    uint   `json:"id"`
+	Title string `json:"title"`
+	URL   string `json:"url"`
+	Icon  string `json:"icon"`
+	Color string `json:"color"`
+}
+
+func toPublicIcon(icon model.CenterIcon) PublicIconResponse {
+	return PublicIconResponse{
+		ID:    icon.ID,
+		Title: icon.Title,
+		URL:   icon.URL,
+		Icon:  icon.Icon,
+		Color: icon.Color,
+	}
+}
+
 type IconHandler struct {
 	service *service.IconService
 }
@@ -18,28 +37,31 @@ func NewIconHandler(service *service.IconService) *IconHandler {
 }
 
 func (h *IconHandler) GetActiveIcons(c *gin.Context) {
+	var icons []model.CenterIcon
+	var err error
+
 	menuIDStr := c.Query("menu_id")
 	if menuIDStr != "" {
-		menuID, err := strconv.ParseUint(menuIDStr, 10, 64)
+		var menuID uint64
+		menuID, err = strconv.ParseUint(menuIDStr, 10, 64)
 		if err != nil {
 			response.BadRequest(c, "无效的 menu_id")
 			return
 		}
-		icons, err := h.service.GetActiveIconsByMenuID(uint(menuID))
-		if err != nil {
-			response.ServerError(c, "获取图标失败")
-			return
-		}
-		response.Success(c, icons)
-		return
+		icons, err = h.service.GetActiveIconsByMenuID(uint(menuID))
+	} else {
+		icons, err = h.service.GetActiveIcons()
 	}
-
-	icons, err := h.service.GetActiveIcons()
 	if err != nil {
 		response.ServerError(c, "获取图标失败")
 		return
 	}
-	response.Success(c, icons)
+
+	result := make([]PublicIconResponse, len(icons))
+	for i, icon := range icons {
+		result[i] = toPublicIcon(icon)
+	}
+	response.Success(c, result)
 }
 
 func (h *IconHandler) GetAllIcons(c *gin.Context) {
